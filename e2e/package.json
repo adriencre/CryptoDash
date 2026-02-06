@@ -1,0 +1,14 @@
+{
+  "name": "cryptodash-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "e2e": "cypress run"
+  },
+  "devDependencies": {
+    "cypress": "^13.0.0",
+    "typescript": "~5.7.0"
+  }
+}

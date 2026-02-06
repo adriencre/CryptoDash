@@ -1,0 +1,10 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+cryptodash:
+  binance:
+    ws-url: wss://stream.binance.com:9443/ws
+    symbols: btcusdt
+  stomp:
+    topic-prices: /topic/prices

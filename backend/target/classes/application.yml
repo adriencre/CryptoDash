@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: cryptodash
+  profiles:
+    active: dev
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+server:
+  port: 8080
+
+# JWT (à remplacer en production)
+cryptodash:
+  jwt:
+    secret: cryptodash-secret-key-min-256-bits-for-hs256-please-change-in-production
+    expiration-ms: 86400000
+# Binance WebSocket (temps réel) + CoinGecko (historique)
+  coingecko:
+    base-url: https://api.coingecko.com
+  binance:
+    ws-url: wss://stream.binance.com:9443/ws
+    rest-url: https://api.binance.com
+    symbols: btcusdt,ethusdt,bnbusdt,solusdt,xrpusdt,adausdt,dogeusdt,avaxusdt,linkusdt,dotusdt,maticusdt,ltcusdt,atomusdt,uniusdt,aptusdt,arbusdt,opusdt,trxusdt,shibusdt,pepeusdt,nearusdt,suiusdt,seiusdt,tiausdt,injusdt,filusdt,icpusdt,xlmusdt,aaveusdt,mkrusdt,sandusdt,manausdt,vetusdt,etcusdt,stxusdt,imxusdt,rndrusdt,fetusdt
+  stomp:
+    topic-prices: /topic/prices
+  snapshot:
+    enabled: true
+    cron: "0 0 * * * *"
