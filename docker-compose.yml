@@ -1,0 +1,47 @@
+# CryptoDash – MySQL via Docker (remplace MAMP)
+# Lancer : docker compose up -d
+# Backend en local : mvn spring-boot:run (profil dev → localhost:3306)
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: cryptodash-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cryptodash
+      MYSQL_USER: cryptodash
+      MYSQL_PASSWORD: cryptodash
+    ports:
+      - "3306:3306"
+    volumes:
+      - cryptodash_mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Backend Spring Boot (optionnel : pour tout lancer avec Docker)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cryptodash-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/cryptodash?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Europe/Paris
+      SPRING_DATASOURCE_USERNAME: cryptodash
+      SPRING_DATASOURCE_PASSWORD: cryptodash
+    ports:
+      - "8080:8080"
+    profiles:
+      - full
+
+volumes:
+  cryptodash_mysql_data:

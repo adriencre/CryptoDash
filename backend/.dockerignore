@@ -1,0 +1,7 @@
+target/
+!target/.gitkeep
+*.log
+.idea
+*.iml
+.git
+.gitignore

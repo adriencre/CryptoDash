@@ -13,8 +13,19 @@ Application de trading de cryptomonnaies fictive (Angular + Spring Boot + WebSoc
 - Java 17+
 - Node.js 18+ (LTS recommandé)
 - Maven 3.8+
+- **Docker** (pour MySQL en dev, remplace MAMP)
 
 ## Démarrage
+
+### Base de données (Docker)
+
+MySQL remplace MAMP. Une seule commande :
+
+```bash
+docker compose up -d
+```
+
+La base `cryptodash` est créée automatiquement (utilisateur : `cryptodash` / mot de passe : `cryptodash`). Port exposé : `3306`.
 
 ### Backend
 
@@ -23,7 +34,11 @@ cd backend
 mvn spring-boot:run
 ```
 
-Profil par défaut : `dev` (H2 en mémoire). API + WebSocket : `http://localhost:8080`, endpoint STOMP : `/ws`.
+Profil par défaut : `dev` (MySQL via Docker). API + WebSocket : `http://localhost:8080`, endpoint STOMP : `/ws`.
+
+Sans Docker : `mvn spring-boot:run -Dspring-boot.run.profiles=dev-h2` pour utiliser H2 en mémoire.
+
+**Option : tout en Docker** (MySQL + backend) : `docker compose --profile full up -d`
 
 ### Frontend
 
