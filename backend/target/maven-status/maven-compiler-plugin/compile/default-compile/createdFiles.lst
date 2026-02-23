@@ -37,9 +37,11 @@ com/cryptodash/service/CoinGeckoMarketChartService.class
 com/cryptodash/service/PriceService.class
 com/cryptodash/entity/BackupCode.class
 com/cryptodash/controller/WalletController.class
+com/cryptodash/dto/LeaderboardEntryDto.class
 com/cryptodash/security/JwtAuthenticationFilter.class
 com/cryptodash/dto/RegisterRequest.class
 com/cryptodash/entity/WalletPosition.class
+com/cryptodash/controller/LeaderboardController.class
 com/cryptodash/dto/KlineDto.class
 com/cryptodash/controller/CryptoController.class
 com/cryptodash/service/AuthService.class

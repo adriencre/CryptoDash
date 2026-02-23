@@ -34,6 +34,13 @@ export interface PnlSummaryDto {
   totalUsdt: number;
 }
 
+export interface LeaderboardEntryDto {
+  accountName: string | null;
+  email: string;
+  totalValueUsdt: number;
+  rank: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly baseUrl = '/api';
@@ -53,6 +60,10 @@ export class ApiService {
 
   getPrices(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/crypto/prices`);
+  }
+
+  getLeaderboard(): Observable<LeaderboardEntryDto[]> {
+    return this.http.get<LeaderboardEntryDto[]>(`${this.baseUrl}/leaderboard`);
   }
 
   getWallet(): Observable<WalletSummaryDto> {

@@ -14,6 +14,7 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent) },
       { path: 'dashboard/:symbol', loadComponent: () => import('./features/dashboard/crypto-detail.component').then(m => m.CryptoDetailComponent) },
+      { path: 'leaderboard', loadComponent: () => import('./features/leaderboard/leaderboard.component').then(m => m.LeaderboardComponent) },
       { path: 'wallet', loadComponent: () => import('./features/wallet/wallet.component').then(m => m.WalletComponent) },
       { path: 'history', loadComponent: () => import('./features/history/history.component').then(m => m.HistoryComponent) },
       { path: 'settings', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent) },

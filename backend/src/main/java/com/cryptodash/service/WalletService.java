@@ -1,5 +1,6 @@
 package com.cryptodash.service;
 
+import com.cryptodash.dto.LeaderboardEntryDto;
 import com.cryptodash.dto.PnlSummaryDto;
 import com.cryptodash.dto.WalletPositionDto;
 import com.cryptodash.dto.WalletSummaryDto;
@@ -15,11 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,6 +42,36 @@ public class WalletService {
                 .map(p -> new WalletPositionDto(p.getSymbol(), p.getAmount()))
                 .collect(Collectors.toList());
         return new WalletSummaryDto(positions);
+    }
+
+    /**
+     * Calcule le classement mondial des traders fictifs.
+     */
+    public List<LeaderboardEntryDto> getLeaderboard() {
+        List<User> users = userRepository.findAll();
+        List<LeaderboardEntryDto> entries = new ArrayList<>();
+
+        for (User user : users) {
+            BigDecimal totalValue = computeCurrentTotalUsdt(user.getId());
+            entries.add(new LeaderboardEntryDto(
+                user.getAccountName(),
+                user.getEmail(),
+                totalValue,
+                0
+            ));
+        }
+
+        // Tri par valeur décroissante
+        entries.sort(Comparator.comparing(LeaderboardEntryDto::totalValueUsdt).reversed());
+
+        // Attribution des rangs
+        List<LeaderboardEntryDto> rankedEntries = new ArrayList<>();
+        for (int i = 0; i < entries.size(); i++) {
+            LeaderboardEntryDto e = entries.get(i);
+            rankedEntries.add(new LeaderboardEntryDto(e.accountName(), e.email(), e.totalValueUsdt(), i + 1));
+        }
+
+        return rankedEntries;
     }
 
     /**

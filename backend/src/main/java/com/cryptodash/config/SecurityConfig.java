@@ -39,7 +39,7 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**", "/topic/**").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/2fa/verify").permitAll()
                         .requestMatchers("/api/crypto/**").permitAll()
-                        .requestMatchers("/api/wallet/**", "/api/history/**", "/api/favorites/**").authenticated()
+                        .requestMatchers("/api/wallet/**", "/api/history/**", "/api/favorites/**", "/api/leaderboard/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

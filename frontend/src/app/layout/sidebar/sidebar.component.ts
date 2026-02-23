@@ -18,6 +18,11 @@ import { AuthService } from '../../core/services/auth.service';
           <span class="w-8 h-8 rounded-lg bg-slate-700/80 flex items-center justify-center text-sm shrink-0">📊</span>
           <span>Dashboard</span>
         </a>
+        <a routerLink="/leaderboard" routerLinkActive="!bg-emerald-500/15 !text-emerald-400 !border-emerald-500/40"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white border border-transparent transition-colors">
+          <span class="w-8 h-8 rounded-lg bg-slate-700/80 flex items-center justify-center text-sm shrink-0">🏆</span>
+          <span>Classement</span>
+        </a>
         <a routerLink="/wallet" routerLinkActive="!bg-emerald-500/15 !text-emerald-400 !border-emerald-500/40"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white border border-transparent transition-colors">
           <span class="w-8 h-8 rounded-lg bg-slate-700/80 flex items-center justify-center text-sm shrink-0">💰</span>
