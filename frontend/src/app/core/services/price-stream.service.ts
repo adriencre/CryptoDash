@@ -41,6 +41,13 @@ export class PriceStreamService implements OnDestroy {
     );
   }
 
+  /** Met à jour les prix avec des données initiales (ex. venant d'une API REST). */
+  setInitialPrices(ticks: PriceTick[]): void {
+    if (!ticks?.length) return;
+    ticks.forEach((t) => this.pricesMap.set(t.symbol, t));
+    this.pricesSubject.next(Array.from(this.pricesMap.values()));
+  }
+
   private connectAndSubscribe(): void {
     const wsUrl = this.getWebSocketUrl();
     // Spring expose /ws avec SockJS : le client doit utiliser SockJS, pas un WebSocket brut.

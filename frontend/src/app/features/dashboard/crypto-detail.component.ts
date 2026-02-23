@@ -176,7 +176,7 @@ export class CryptoDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.fullSymbol = this.symbol.includes('USDT') ? this.symbol : this.symbol + 'USDT';
 
     // Charger l'historique 7 j par défaut pour afficher tout de suite l'historique des prix
-    const defaultPeriod = PERIODS[1]; // 7 j
+    const defaultPeriod = PERIODS[1]!; // 7 j
     this.selectedPeriod = defaultPeriod;
     this.loadMarketChart(defaultPeriod);
 
@@ -375,8 +375,8 @@ export class CryptoDetailComponent implements OnInit, OnDestroy, AfterViewInit {
             callbacks: {
               title: (items) => {
                 if (!items?.length) return '';
-                const ts = Number(items[0].label);
-                if (!ts) return String(items[0].label);
+                const ts = Number(items[0]!.label);
+                if (!ts) return String(items[0]!.label);
                 return new Date(ts).toLocaleDateString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
               },
             },
@@ -392,7 +392,7 @@ export class CryptoDetailComponent implements OnInit, OnDestroy, AfterViewInit {
               callback: (value, index, ticks) => {
                 const labels = this.chart?.data.labels;
                 if (!labels?.length || index >= labels.length) return '';
-                const ts = Number(labels[index]);
+                const ts = Number(labels![index]);
                 if (!ts) return '';
                 return new Date(ts).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
               },
@@ -416,7 +416,7 @@ export class CryptoDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   private updateChartWithData(data: { t: number; y: number }[]): void {
     if (!this.chart) return;
     this.chart.data.labels = data.map((d) => d.t);
-    this.chart.data.datasets[0].data = data.map((d) => d.y);
+    this.chart.data.datasets[0]!.data = data.map((d) => d.y);
     this.chart.update('none');
   }
 }

@@ -160,9 +160,23 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Charger les prix initiaux immédiatement
+    this.api.getPrices().subscribe({
+      next: (initialPrices) => {
+        if (initialPrices && initialPrices.length > 0) {
+          this.prices = initialPrices;
+          this.priceStream.setInitialPrices(initialPrices);
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {}
+    });
+
     this.prices$.subscribe((p) => {
-      this.prices = p ?? [];
-      this.cdr.markForCheck();
+      if (p && p.length > 0) {
+        this.prices = p;
+        this.cdr.markForCheck();
+      }
     });
     this.api.getFavorites().subscribe({
       next: (symbols) => {

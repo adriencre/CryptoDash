@@ -9,6 +9,7 @@ import com.cryptodash.entity.WalletPosition;
 import com.cryptodash.repository.TransactionRepository;
 import com.cryptodash.repository.UserRepository;
 import com.cryptodash.repository.WalletPositionRepository;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +40,7 @@ public class WalletService {
         this.priceService = priceService;
     }
 
-    public WalletSummaryDto getWallet(UUID userId) {
+    public WalletSummaryDto getWallet(@NonNull UUID userId) {
         List<WalletPositionDto> positions = positionRepository.findByUserIdOrderBySymbol(userId).stream()
                 .map(p -> new WalletPositionDto(p.getSymbol(), p.getAmount()))
                 .collect(Collectors.toList());
@@ -50,7 +51,7 @@ public class WalletService {
      * Calcule la valeur totale du portefeuille en USDT (positions × prix actuels).
      * USDT compte pour sa quantité ; les autres actifs utilisent le dernier prix Binance.
      */
-    public BigDecimal computeCurrentTotalUsdt(UUID userId) {
+    public BigDecimal computeCurrentTotalUsdt(@NonNull UUID userId) {
         List<WalletPosition> positions = positionRepository.findByUserIdOrderBySymbol(userId);
         BigDecimal total = BigDecimal.ZERO;
         for (WalletPosition p : positions) {
@@ -70,7 +71,7 @@ public class WalletService {
      * Calcule le P&L réalisé (ventes - coût des ventes) et non réalisé (valeur actuelle - coût des positions).
      * Coût moyen par symbole en rejouant les transactions (BUY/RECEIVE ajoutent au coût, SELL/SEND retirent au prorata).
      */
-    public PnlSummaryDto computePnl(UUID userId) {
+    public PnlSummaryDto computePnl(@NonNull UUID userId) {
         BigDecimal totalValue = computeCurrentTotalUsdt(userId);
         List<Transaction> transactions = transactionRepository.findByUserIdOrderByCreatedAtAsc(userId);
         Map<String, BigDecimal> totalAmountBySymbol = new HashMap<>();
@@ -128,7 +129,7 @@ public class WalletService {
      * Initialise le portefeuille avec un solde USDT fictif (appelé à la première consultation si vide).
      */
     @Transactional
-    public void ensureInitialBalance(UUID userId) {
+    public void ensureInitialBalance(@NonNull UUID userId) {
         if (positionRepository.findByUserIdAndSymbol(userId, USDT).isEmpty()) {
             User user = userRepository.getReferenceById(userId);
             WalletPosition usdt = new WalletPosition();
@@ -175,7 +176,7 @@ public class WalletService {
     }
 
     @Transactional
-    public void sell(UUID userId, String symbol, BigDecimal amount, BigDecimal priceUsdt) {
+    public void sell(@NonNull UUID userId, String symbol, BigDecimal amount, BigDecimal priceUsdt) {
         ensureInitialBalance(userId);
         String baseSymbol = symbol.replace(USDT, "");
         BigDecimal proceeds = amount.multiply(priceUsdt);
@@ -207,7 +208,7 @@ public class WalletService {
      * Envoie de la crypto du portefeuille de l'utilisateur vers un autre compte (identifié par email ou nom de compte).
      */
     @Transactional
-    public void sendCrypto(UUID senderUserId, String recipientIdentifier, String symbol, BigDecimal amount) {
+    public void sendCrypto(@NonNull UUID senderUserId, String recipientIdentifier, String symbol, BigDecimal amount) {
         String baseSymbol = symbol.toUpperCase().replace(USDT, "");
         if (baseSymbol.isEmpty()) {
             throw new IllegalArgumentException("Vous ne pouvez pas envoyer USDT par virement interne. Utilisez un actif (BTC, ETH, etc.).");

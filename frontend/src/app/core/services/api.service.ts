@@ -51,6 +51,10 @@ export class ApiService {
     });
   }
 
+  getPrices(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/crypto/prices`);
+  }
+
   getWallet(): Observable<WalletSummaryDto> {
     return this.http.get<WalletSummaryDto>(`${this.baseUrl}/wallet`);
   }

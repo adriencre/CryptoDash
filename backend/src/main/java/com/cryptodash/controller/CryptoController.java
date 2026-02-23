@@ -14,9 +14,19 @@ public class CryptoController {
 
     private static final Logger log = LoggerFactory.getLogger(CryptoController.class);
     private final CoinGeckoMarketChartService marketChartService;
+    private final com.cryptodash.service.PriceService priceService;
 
-    public CryptoController(CoinGeckoMarketChartService marketChartService) {
+    public CryptoController(CoinGeckoMarketChartService marketChartService, com.cryptodash.service.PriceService priceService) {
         this.marketChartService = marketChartService;
+        this.priceService = priceService;
+    }
+
+    /**
+     * Liste des prix actuels (état initial pour le frontend).
+     */
+    @GetMapping("/prices")
+    public java.util.Collection<com.cryptodash.dto.PriceTickDto> getCurrentPrices() {
+        return priceService.getCurrentPrices();
     }
 
     /**

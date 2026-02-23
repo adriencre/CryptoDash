@@ -522,8 +522,8 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
             callbacks: {
               title: (items) => {
                 if (!items?.length) return '';
-                const ts = Number(items[0].label);
-                if (!ts) return String(items[0].label);
+                const ts = Number(items[0]!.label);
+                if (!ts) return String(items[0]!.label);
                 return new Date(ts).toLocaleDateString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
               },
               label: (item) => (item.raw != null ? `Valeur: ${this.formatPrice(Number(item.raw))} USDT` : ''),
@@ -540,7 +540,7 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
               callback: (value, index, ticks) => {
                 const labels = this.performanceChart?.data.labels;
                 if (!labels?.length || index >= labels.length) return '';
-                const ts = Number(labels[index]);
+                const ts = Number(labels![index]);
                 if (!ts) return '';
                 return new Date(ts).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
               },
@@ -563,7 +563,7 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
   private updatePerformanceChart(): void {
     if (!this.performanceChart) return;
     this.performanceChart.data.labels = this.performanceData.map((d) => d.t);
-    this.performanceChart.data.datasets[0].data = this.performanceData.map((d) => d.y);
+    this.performanceChart.data.datasets[0]!.data = this.performanceData.map((d) => d.y);
     this.performanceChart.update('none');
   }
 
@@ -654,16 +654,26 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.updateDonutChart();
+    setTimeout(() => {
+      this.updateDonutChart();
+      if (this.performanceData.length) {
+        this.initPerformanceChart();
+        this.updatePerformanceChart();
+      }
+    }, 100);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.donutChart?.destroy();
-    this.donutChart = null;
-    this.performanceChart?.destroy();
-    this.performanceChart = null;
+    if (this.donutChart) {
+      this.donutChart.destroy();
+      this.donutChart = null;
+    }
+    if (this.performanceChart) {
+      this.performanceChart.destroy();
+      this.performanceChart = null;
+    }
   }
 
   get totalValue(): number | null {
@@ -761,8 +771,8 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.donutChart) {
       this.donutChart.data.labels = labels;
-      this.donutChart.data.datasets[0].data = values;
-      this.donutChart.data.datasets[0].backgroundColor = colors;
+      this.donutChart.data.datasets[0]!.data = values;
+      this.donutChart.data.datasets[0]!.backgroundColor = colors;
       this.donutChart.update('none');
       return;
     }

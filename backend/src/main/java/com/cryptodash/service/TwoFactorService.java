@@ -6,6 +6,7 @@ import com.cryptodash.repository.BackupCodeRepository;
 import com.cryptodash.repository.UserRepository;
 import com.eatthepath.otp.TimeBasedOneTimePasswordGenerator;
 import org.apache.commons.codec.binary.Base32;
+import org.springframework.lang.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +47,7 @@ public class TwoFactorService {
      * Retourne le secret Base32 et l'URL pour le QR code.
      */
     @Transactional
-    public TwoFactorSetupResult setupTwoFactor(UUID userId) {
+    public TwoFactorSetupResult setupTwoFactor(@NonNull UUID userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable."));
         if (user.isTwoFactorEnabled()) {
             throw new IllegalArgumentException("La double authentification est déjà activée.");
@@ -83,7 +84,6 @@ public class TwoFactorService {
         userRepository.save(user);
 
         List<String> plainCodes = generateBackupCodes();
-        Instant now = Instant.now();
         for (String plain : plainCodes) {
             BackupCode bc = new BackupCode();
             bc.setUser(user);
@@ -98,7 +98,7 @@ public class TwoFactorService {
      * Désactive la 2FA après vérification du mot de passe et du code TOTP.
      */
     @Transactional
-    public void disableTwoFactor(UUID userId, String password, String code) {
+    public void disableTwoFactor(@NonNull UUID userId, String password, String code) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable."));
         if (!user.isTwoFactorEnabled()) {
             throw new IllegalArgumentException("La double authentification n'est pas activée.");
@@ -118,7 +118,7 @@ public class TwoFactorService {
     /**
      * Vérifie un code TOTP ou un code de secours lors du login. Si code de secours, il est consommé.
      */
-    public boolean verifyTwoFactorCode(UUID userId, String code) {
+    public boolean verifyTwoFactorCode(@NonNull UUID userId, String code) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable."));
         if (!user.isTwoFactorEnabled()) return true;
         if (verifyTotp(user.getTwoFactorSecret(), code)) return true;
@@ -129,7 +129,7 @@ public class TwoFactorService {
      * Régénère les 12 codes de secours (après vérification mot de passe + TOTP).
      */
     @Transactional
-    public List<String> regenerateBackupCodes(UUID userId, String password, String code) {
+    public List<String> regenerateBackupCodes(@NonNull UUID userId, String password, String code) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable."));
         if (!user.isTwoFactorEnabled()) {
             throw new IllegalArgumentException("Activez d'abord la double authentification.");
@@ -171,7 +171,7 @@ public class TwoFactorService {
     }
 
     @Transactional
-    protected boolean consumeBackupCode(UUID userId, String code) {
+    protected boolean consumeBackupCode(@NonNull UUID userId, String code) {
         if (code == null || code.length() != BACKUP_CODE_LENGTH) return false;
         String hash = hashBackupCode(code);
         var backup = backupCodeRepository.findByUserIdAndCodeHashAndUsedFalse(userId, hash);

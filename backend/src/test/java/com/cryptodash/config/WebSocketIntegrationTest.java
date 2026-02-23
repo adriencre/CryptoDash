@@ -4,6 +4,8 @@ import com.cryptodash.dto.PriceTickDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
@@ -37,22 +39,23 @@ class WebSocketIntegrationTest {
         int port = Integer.parseInt(environment.getProperty("local.server.port", "8080"));
         String url = "http://localhost:" + port + "/ws";
 
-        SockJsClient sockJsClient = new SockJsClient(List.of(new WebSocketTransport(new StandardWebSocketClient())));
+        List<org.springframework.web.socket.sockjs.client.Transport> transports = List.of(new WebSocketTransport(new StandardWebSocketClient()));
+        SockJsClient sockJsClient = new SockJsClient(transports);
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
         BlockingQueue<PriceTickDto> received = new ArrayBlockingQueue<>(2);
-        StompSession session = stompClient.connect(url, new StompSessionHandlerAdapter() {})
+        StompSession session = stompClient.connectAsync(url, new StompSessionHandlerAdapter() {})
                 .get(5, TimeUnit.SECONDS);
 
         session.subscribe("/topic/prices", new StompFrameHandler() {
             @Override
-            public Type getPayloadType(StompHeaders headers) {
+            public @NonNull Type getPayloadType(@NonNull StompHeaders headers) {
                 return PriceTickDto.class;
             }
 
             @Override
-            public void handleFrame(StompHeaders headers, Object payload) {
+            public void handleFrame(@NonNull StompHeaders headers, @Nullable Object payload) {
                 if (payload instanceof PriceTickDto dto) {
                     received.add(dto);
                 }
