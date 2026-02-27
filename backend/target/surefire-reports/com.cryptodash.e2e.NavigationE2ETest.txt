@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.cryptodash.e2e.NavigationE2ETest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.75 s -- in com.cryptodash.e2e.NavigationE2ETest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.97 s -- in com.cryptodash.e2e.NavigationE2ETest

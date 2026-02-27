@@ -34,7 +34,8 @@ class PriceServiceTest {
                 "wss://stream.binance.com:9443/ws",
                 List.of("btcusdt", "ethusdt"),
                 "/topic/prices",
-                "https://api.coingecko.com"
+                "https://api.coingecko.com",
+                null  // Pas de clé API dans les tests
         );
     }
 

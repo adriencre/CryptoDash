@@ -16,6 +16,8 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -70,12 +72,15 @@ public class CoinGeckoMarketChartService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String coingeckoBaseUrl;
+    private final String coingeckoApiKey;
 
     public CoinGeckoMarketChartService(
             RestTemplate restTemplate,
-            @Value("${cryptodash.coingecko.base-url:https://api.coingecko.com}") String coingeckoBaseUrl) {
+            @Value("${cryptodash.coingecko.base-url:https://api.coingecko.com}") String coingeckoBaseUrl,
+            @Value("${cryptodash.coingecko.api-key:}") String coingeckoApiKey) {
         this.restTemplate = restTemplate;
         this.coingeckoBaseUrl = coingeckoBaseUrl;
+        this.coingeckoApiKey = coingeckoApiKey;
     }
 
     /**
@@ -92,11 +97,17 @@ public class CoinGeckoMarketChartService {
             return List.of();
         }
         String url = coingeckoBaseUrl + "/api/v3/coins/" + coinId + "/market_chart?vs_currency=usd&days=" + days;
+        if (coingeckoApiKey != null && !coingeckoApiKey.trim().isEmpty() && coingeckoApiKey.startsWith("CG-")) {
+            url = url + "&x_cg_demo_api_key=" + URLEncoder.encode(coingeckoApiKey, StandardCharsets.UTF_8);
+        }
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
             headers.set("User-Agent",
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            if (coingeckoApiKey != null && !coingeckoApiKey.trim().isEmpty() && !coingeckoApiKey.startsWith("CG-")) {
+                headers.set("X-Cg-Pro-Api-Key", coingeckoApiKey);
+            }
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers),
                     String.class);
             String json = response.getBody();

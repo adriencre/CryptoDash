@@ -20,6 +20,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +43,7 @@ public class PriceService {
     private final List<String> symbols;
     private final String topicPrices;
     private final String coingeckoBaseUrl;
+    private final String coingeckoApiKey;
     private final RestTemplate restTemplate = new RestTemplate();
 
     private volatile WebSocketClient client;
@@ -75,13 +78,15 @@ public class PriceService {
             @Value("${cryptodash.binance.ws-url:wss://stream.binance.com:9443/ws}") String binanceWsUrl,
             @Value("${cryptodash.binance.symbols}") List<String> symbols,
             @Value("${cryptodash.stomp.topic-prices:/topic/prices}") String topicPrices,
-            @Value("${cryptodash.coingecko.base-url:https://api.coingecko.com}") String coingeckoBaseUrl) {
+            @Value("${cryptodash.coingecko.base-url:https://api.coingecko.com}") String coingeckoBaseUrl,
+            @Value("${cryptodash.coingecko.api-key:}") String coingeckoApiKey) {
         this.messagingTemplate = messagingTemplate;
         this.objectMapper = objectMapper;
         this.binanceWsUrl = binanceWsUrl;
         this.symbols = symbols;
         this.topicPrices = topicPrices;
         this.coingeckoBaseUrl = coingeckoBaseUrl;
+        this.coingeckoApiKey = coingeckoApiKey;
     }
 
     @PostConstruct
@@ -128,6 +133,10 @@ public class PriceService {
     private void loadInitialPricesFromCoinGecko() {
         try {
             log.info("Loading initial prices for {} symbols from CoinGecko...", symbols.size());
+            log.info("CoinGecko API key present: {}", coingeckoApiKey != null && !coingeckoApiKey.trim().isEmpty());
+            if (coingeckoApiKey != null && !coingeckoApiKey.trim().isEmpty()) {
+                log.info("CoinGecko API key starts with: {}", coingeckoApiKey.substring(0, Math.min(10, coingeckoApiKey.length())));
+            }
             String ids = symbols.stream()
                     .map(s -> s.toUpperCase().replace("USDT", ""))
                     .map(SYMBOL_MAP::get)
@@ -136,10 +145,16 @@ public class PriceService {
 
             String url = coingeckoBaseUrl + "/api/v3/coins/markets?vs_currency=usd&ids=" + ids
                     + "&price_change_percentage=24h";
+            if (coingeckoApiKey != null && !coingeckoApiKey.trim().isEmpty() && coingeckoApiKey.startsWith("CG-")) {
+                url = url + "&x_cg_demo_api_key=" + URLEncoder.encode(coingeckoApiKey, StandardCharsets.UTF_8);
+            }
 
             HttpHeaders headers = new HttpHeaders();
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
             headers.set("User-Agent", "Mozilla/5.0");
+            if (coingeckoApiKey != null && !coingeckoApiKey.trim().isEmpty() && !coingeckoApiKey.startsWith("CG-")) {
+                headers.set("X-Cg-Pro-Api-Key", coingeckoApiKey);
+            }
 
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers),
                     String.class);

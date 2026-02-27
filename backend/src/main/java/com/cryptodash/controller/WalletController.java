@@ -42,7 +42,7 @@ public class WalletController {
     public void buy(
             @AuthenticationPrincipal UUID userId,
             @Valid @RequestBody BuySellRequest request,
-            @RequestParam BigDecimal priceUsdt) {
+            @RequestParam("priceUsdt") BigDecimal priceUsdt) {
         String symbol = request.symbol().toUpperCase().contains("USDT") ? request.symbol().toUpperCase()
                 : request.symbol().toUpperCase() + "USDT";
         walletService.buy(userId, symbol, request.amount(), priceUsdt);
@@ -53,7 +53,7 @@ public class WalletController {
     public void sell(
             @AuthenticationPrincipal UUID userId,
             @Valid @RequestBody BuySellRequest request,
-            @RequestParam BigDecimal priceUsdt) {
+            @RequestParam("priceUsdt") BigDecimal priceUsdt) {
         String symbol = request.symbol().toUpperCase().contains("USDT") ? request.symbol().toUpperCase()
                 : request.symbol().toUpperCase() + "USDT";
         walletService.sell(userId, symbol, request.amount(), priceUsdt);
@@ -71,7 +71,7 @@ public class WalletController {
     @GetMapping("/performance")
     public List<PerformancePointDto> getPerformance(
             @AuthenticationPrincipal UUID userId,
-            @RequestParam(defaultValue = "7d") String period) {
+            @RequestParam(value = "period", defaultValue = "7d") String period) {
         Instant to = Instant.now();
         Instant from = switch (period != null ? period.toLowerCase() : "7d") {
             case "30d" -> to.minus(30, ChronoUnit.DAYS);

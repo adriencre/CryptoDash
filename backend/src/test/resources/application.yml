@@ -3,6 +3,8 @@ spring:
     allow-bean-definition-overriding: true
 
 cryptodash:
+  coingecko:
+    api-key: CG-KGD1LdXvrQDM9fbk7QX24cG8
   binance:
     ws-url: wss://stream.binance.com:9443/ws
     symbols: btcusdt

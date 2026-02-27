@@ -37,8 +37,8 @@ public class CryptoController {
      */
     @GetMapping("/{symbol}/market_chart")
     public List<KlineDto> getMarketChart(
-            @PathVariable String symbol,
-            @RequestParam(defaultValue = "7") String days) {
+            @PathVariable("symbol") String symbol,
+            @RequestParam(value = "days", defaultValue = "7") String days) {
         String sym = symbol.toUpperCase().contains("USDT") ? symbol.toUpperCase() : symbol.toUpperCase() + "USDT";
         log.info("GET market_chart symbol={} days={}", sym, days);
         List<KlineDto> result = marketChartService.getMarketChart(sym, days);

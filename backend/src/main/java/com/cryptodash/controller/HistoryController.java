@@ -29,7 +29,7 @@ public class HistoryController {
     @GetMapping
     public List<TransactionDto> getHistory(
             @AuthenticationPrincipal UUID userId,
-            @RequestParam(defaultValue = "50") int size) {
+            @RequestParam(value = "size", defaultValue = "50") int size) {
         int limit = Math.min(Math.max(1, size), MAX_SIZE);
         return transactionRepository.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(0, limit))
                 .stream()

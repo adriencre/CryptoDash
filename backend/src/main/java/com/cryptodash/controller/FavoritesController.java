@@ -27,7 +27,7 @@ public class FavoritesController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void addFavorite(
             @AuthenticationPrincipal UUID userId,
-            @PathVariable String symbol) {
+            @PathVariable("symbol") String symbol) {
         favoriteService.addFavorite(userId, symbol);
     }
 
@@ -35,7 +35,7 @@ public class FavoritesController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeFavorite(
             @AuthenticationPrincipal UUID userId,
-            @PathVariable String symbol) {
+            @PathVariable("symbol") String symbol) {
         favoriteService.removeFavorite(userId, symbol);
     }
 }

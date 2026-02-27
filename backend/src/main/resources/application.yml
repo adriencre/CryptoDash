@@ -16,6 +16,7 @@ cryptodash:
 # Binance WebSocket (temps réel) + CoinGecko (historique)
   coingecko:
     base-url: https://api.coingecko.com
+    api-key: CG-KGD1LdXvrQDM9fbk7QX24cG8
   binance:
     ws-url: wss://stream.binance.com:9443/ws
     rest-url: https://api.binance.com
@@ -25,6 +26,50 @@ cryptodash:
   snapshot:
     enabled: true
     cron: "0 0 * * * *"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev-h2
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+
+cryptodash:
+  coingecko:
+    api-key: CG-KGD1LdXvrQDM9fbk7QX24cG8
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+
+cryptodash:
+  coingecko:
+    api-key: CG-KGD1LdXvrQDM9fbk7QX24cG8
 
 ---
 spring:

@@ -30,7 +30,7 @@ class CoinGeckoMarketChartServiceTest {
 
     @BeforeEach
     void setUp() {
-        marketChartService = new CoinGeckoMarketChartService(restTemplate, "https://api.coingecko.com");
+        marketChartService = new CoinGeckoMarketChartService(restTemplate, "https://api.coingecko.com", null);
     }
 
     @Test
