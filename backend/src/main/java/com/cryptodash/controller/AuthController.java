@@ -52,7 +52,8 @@ public class AuthController {
 
     @PostMapping("/2fa/enable")
     @ResponseStatus(HttpStatus.OK)
-    public List<String> enable2FA(@AuthenticationPrincipal UUID userId, @Valid @RequestBody TwoFactorEnableRequest request) {
+    public List<String> enable2FA(@AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody TwoFactorEnableRequest request) {
         return twoFactorService.enableTwoFactor(userId, request.code());
     }
 
@@ -63,7 +64,8 @@ public class AuthController {
     }
 
     @PostMapping("/2fa/backup-codes/regenerate")
-    public List<String> regenerateBackupCodes(@AuthenticationPrincipal UUID userId, @Valid @RequestBody TwoFactorDisableRequest request) {
+    public List<String> regenerateBackupCodes(@AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody TwoFactorDisableRequest request) {
         return twoFactorService.regenerateBackupCodes(userId, request.password(), request.code());
     }
 
@@ -73,7 +75,8 @@ public class AuthController {
     }
 
     @PutMapping("/profile")
-    public ProfileResponse updateProfile(@AuthenticationPrincipal UUID userId, @Valid @RequestBody UpdateProfileRequest request) {
+    public ProfileResponse updateProfile(@AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody UpdateProfileRequest request) {
         return authService.updateProfile(userId, request);
     }
 }

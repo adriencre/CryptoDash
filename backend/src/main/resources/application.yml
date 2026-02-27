@@ -8,22 +8,6 @@ spring:
       ddl-auto: validate
     show-sql: false
 
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-  datasource:
-    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Europe/Paris
-    username: ${MYSQLUSER}
-    password: ${MYSQLPASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: update
-
-server:
-  port: ${PORT:8080}
-
 # JWT (à remplacer en production)
 cryptodash:
   jwt:
@@ -41,3 +25,20 @@ cryptodash:
   snapshot:
     enabled: true
     cron: "0 0 * * * *"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Europe/Paris
+    username: ${MYSQLUSER}
+    password: ${MYSQLPASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+server:
+  port: ${PORT:8080}
+

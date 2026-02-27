@@ -27,9 +27,11 @@ import { ApiService, TransactionDto } from '../../core/services/api.service';
             @for (tx of transactions; track tx.id) {
               <li class="p-4 flex flex-wrap items-center justify-between gap-4 hover:bg-slate-800/50 transition-colors">
                 <div class="flex items-center gap-4">
-                  <span class="w-10 h-10 rounded-full flex items-center justify-center shrink-0" [ngClass]="tx.type === 'BUY' || tx.type === 'RECEIVE' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'">
+                  <span class="w-10 h-10 rounded-full flex items-center justify-center shrink-0" [ngClass]="tx.type === 'BUY' || tx.type === 'RECEIVE' || tx.type === 'DEPOSIT' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'">
                     @if (tx.type === 'BUY') {
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    } @else if (tx.type === 'DEPOSIT') {
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                     } @else if (tx.type === 'SEND') {
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                     } @else if (tx.type === 'RECEIVE') {
@@ -44,8 +46,8 @@ import { ApiService, TransactionDto } from '../../core/services/api.service';
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="font-medium tabular-nums" [ngClass]="tx.type === 'BUY' || tx.type === 'RECEIVE' ? 'text-emerald-400' : 'text-rose-400'">
-                    {{ (tx.type === 'BUY' || tx.type === 'RECEIVE') ? '+' : '-' }}{{ formatAmount(tx.amount) }} {{ tx.symbol }}
+                  <p class="font-medium tabular-nums" [ngClass]="tx.type === 'BUY' || tx.type === 'RECEIVE' || tx.type === 'DEPOSIT' ? 'text-emerald-400' : 'text-rose-400'">
+                    {{ (tx.type === 'BUY' || tx.type === 'RECEIVE' || tx.type === 'DEPOSIT') ? '+' : '-' }}{{ formatAmount(tx.amount) }} {{ tx.symbol }}
                   </p>
                   @if (tx.type === 'BUY' || tx.type === 'SELL') {
                     <p class="text-slate-400 text-sm tabular-nums">{{ formatPrice(tx.totalUsdt) }} USDT</p>
@@ -110,6 +112,7 @@ export class HistoryComponent implements OnInit {
   txLabel(tx: TransactionDto): string {
     if (tx.type === 'BUY') return `Achat ${tx.symbol}`;
     if (tx.type === 'SELL') return `Vente ${tx.symbol}`;
+    if (tx.type === 'DEPOSIT') return `Dépôt USDT (carte)`;
     if (tx.type === 'SEND') return `Envoyé à ${tx.counterpartyAccountName ?? '?'} · ${tx.symbol}`;
     if (tx.type === 'RECEIVE') return `Reçu de ${tx.counterpartyAccountName ?? '?'} · ${tx.symbol}`;
     return `${tx.type} ${tx.symbol}`;

@@ -65,15 +65,16 @@ public class CoinGeckoMarketChartService {
             Map.entry("STX", "stacks"),
             Map.entry("IMX", "immutable-x"),
             Map.entry("RNDR", "render-token"),
-            Map.entry("FET", "fetch-ai")
-    );
+            Map.entry("FET", "fetch-ai"));
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String coingeckoBaseUrl;
 
     public CoinGeckoMarketChartService(
+            RestTemplate restTemplate,
             @Value("${cryptodash.coingecko.base-url:https://api.coingecko.com}") String coingeckoBaseUrl) {
+        this.restTemplate = restTemplate;
         this.coingeckoBaseUrl = coingeckoBaseUrl;
     }
 
@@ -94,8 +95,10 @@ public class CoinGeckoMarketChartService {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-            headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+            headers.set("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers),
+                    String.class);
             String json = response.getBody();
             if (json == null) {
                 log.warn("CoinGecko market_chart empty body for {} days={}", symbol, days);
@@ -119,7 +122,8 @@ public class CoinGeckoMarketChartService {
             log.info("CoinGecko market_chart {} days={} -> {} points", symbol, days, result.size());
             return result;
         } catch (RestClientResponseException e) {
-            log.warn("CoinGecko API error for {} days={}: status={} body={}", symbol, days, e.getStatusCode(), e.getResponseBodyAsString());
+            log.warn("CoinGecko API error for {} days={}: status={} body={}", symbol, days, e.getStatusCode(),
+                    e.getResponseBodyAsString());
             return List.of();
         } catch (Exception e) {
             log.warn("Failed to fetch CoinGecko market_chart for {} days={}: {}", symbol, days, e.getMessage());

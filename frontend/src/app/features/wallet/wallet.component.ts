@@ -9,7 +9,7 @@ import { PriceTick } from '../../core/models/price-tick.model';
 import { getCryptoIconUrl } from '../../core/constants/crypto-icons';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { NgClass } from '@angular/common';
+import { NgClass, DecimalPipe } from '@angular/common';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 
 export type TotalCurrency = 'USDT' | 'USD' | 'EUR' | 'BTC' | 'SOL';
@@ -27,7 +27,7 @@ const PERFORMANCE_PERIODS: { label: string; value: '7d' | '30d' | '90d' }[] = [
 @Component({
   selector: 'app-wallet',
   standalone: true,
-  imports: [RouterLink, FormsModule, NgClass],
+  imports: [RouterLink, FormsModule, NgClass, DecimalPipe],
   template: `
     <div class="mb-8">
       <div class="flex flex-wrap items-center justify-between gap-4">
@@ -62,6 +62,7 @@ const PERFORMANCE_PERIODS: { label: string; value: '7d' | '30d' | '90d' }[] = [
             <a routerLink="/dashboard" class="rounded-xl bg-emerald-500 hover:bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition-colors">+ Acheter</a>
             <button type="button" (click)="openSendModal()" class="rounded-xl border border-slate-600 bg-slate-800/80 hover:bg-slate-700 px-4 py-2.5 text-sm font-medium text-white transition-colors">Envoyer</button>
             <button type="button" (click)="openReceiveModal()" class="rounded-xl border border-slate-600 bg-slate-800/80 hover:bg-slate-700 px-4 py-2.5 text-sm font-medium text-white transition-colors">Recevoir</button>
+            <button type="button" (click)="openDepositModal()" class="rounded-xl border border-slate-600 bg-slate-800/80 hover:bg-slate-700 px-4 py-2.5 text-sm font-medium text-white transition-colors">Déposer</button>
           </div>
         }
       </div>
@@ -168,9 +169,11 @@ const PERFORMANCE_PERIODS: { label: string; value: '7d' | '30d' | '90d' }[] = [
                 @for (tx of recentTransactions; track tx.id) {
                   <li class="p-3 flex items-center justify-between gap-3 hover:bg-slate-800/50 transition-colors">
                     <div class="flex items-center gap-3 min-w-0">
-                      <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" [ngClass]="tx.type === 'BUY' || tx.type === 'RECEIVE' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'">
+                      <span class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" [ngClass]="tx.type === 'BUY' || tx.type === 'RECEIVE' || tx.type === 'DEPOSIT' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'">
                         @if (tx.type === 'BUY') {
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        } @else if (tx.type === 'DEPOSIT') {
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                         } @else if (tx.type === 'SEND') {
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                         } @else if (tx.type === 'RECEIVE') {
@@ -185,8 +188,8 @@ const PERFORMANCE_PERIODS: { label: string; value: '7d' | '30d' | '90d' }[] = [
                       </div>
                     </div>
                     <div class="text-right shrink-0">
-                      <span class="text-sm font-medium tabular-nums" [ngClass]="tx.type === 'BUY' || tx.type === 'RECEIVE' ? 'text-emerald-400' : 'text-rose-400'">
-                        {{ (tx.type === 'BUY' || tx.type === 'RECEIVE') ? '+' : '-' }}{{ formatAmount(tx.amount) }} {{ tx.symbol }}
+                      <span class="text-sm font-medium tabular-nums" [ngClass]="tx.type === 'BUY' || tx.type === 'RECEIVE' || tx.type === 'DEPOSIT' ? 'text-emerald-400' : 'text-rose-400'">
+                        {{ (tx.type === 'BUY' || tx.type === 'RECEIVE' || tx.type === 'DEPOSIT') ? '+' : '-' }}{{ formatAmount(tx.amount) }} {{ tx.symbol }}
                       </span>
                       @if (tx.type === 'BUY' || tx.type === 'SELL') {
                         <span class="text-slate-400 text-xs tabular-nums block">{{ formatPrice(tx.totalUsdt) }} USDT</span>
@@ -355,6 +358,248 @@ const PERFORMANCE_PERIODS: { label: string; value: '7d' | '30d' | '90d' }[] = [
         </div>
       </div>
     }
+
+    @if (showDepositModal) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);" (click)="onDepositBackdropClick($event)">
+        <div class="rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid rgba(100,116,139,0.4);" (click)="$event.stopPropagation()">
+
+          <!-- Header -->
+          <div class="p-6 border-b" style="border-color: rgba(100,116,139,0.3);">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #10b981, #059669);">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                </div>
+                <div>
+                  <h2 class="text-lg font-bold text-white">Ajouter des USDT</h2>
+                  <p class="text-xs" style="color: rgba(148,163,184,0.8);">Paiement sécurisé simulé</p>
+                </div>
+              </div>
+              <button type="button" (click)="closeDepositModal()" class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style="color: #94a3b8;" onmouseenter="this.style.background='rgba(100,116,139,0.2)'" onmouseleave="this.style.background='transparent'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            <!-- Steps indicator -->
+            @if (depositStep < 3) {
+              <div class="flex items-center gap-2 mt-5">
+                @for (s of [1,2,3]; track s) {
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+                         [style.background]="depositStep >= s ? 'linear-gradient(135deg,#10b981,#059669)' : 'rgba(30,41,59,1)'"
+                         [style.border]="depositStep >= s ? 'none' : '1px solid rgba(100,116,139,0.5)'"
+                         [style.color]="depositStep >= s ? 'white' : '#64748b'">
+                      {{ s }}
+                    </div>
+                    @if (s < 3) {
+                      <div class="flex-1 h-px transition-all duration-300" style="min-width: 40px;"
+                           [style.background]="depositStep > s ? 'linear-gradient(90deg,#10b981,#059669)' : 'rgba(100,116,139,0.3)'"></div>
+                    }
+                  </div>
+                }
+                <span class="ml-2 text-xs" style="color:#64748b;">
+                  @if (depositStep === 1) { Montant }
+                  @else if (depositStep === 2) { Paiement }
+                </span>
+              </div>
+            }
+          </div>
+
+          <!-- Step 1 : Choisir le montant -->
+          @if (depositStep === 1) {
+            <div class="p-6 space-y-5">
+              <div>
+                <label class="block text-sm font-medium mb-3" style="color:#94a3b8;">Montants suggérés</label>
+                <div class="grid grid-cols-3 gap-2">
+                  @for (preset of depositPresets; track preset) {
+                    <button type="button" (click)="selectPreset(preset)"
+                            class="py-3 rounded-xl text-sm font-semibold transition-all duration-200"
+                            [style.background]="depositForm.amount === preset ? 'linear-gradient(135deg,rgba(16,185,129,0.25),rgba(5,150,105,0.25))' : 'rgba(30,41,59,0.8)'"
+                            [style.border]="depositForm.amount === preset ? '1px solid rgba(16,185,129,0.6)' : '1px solid rgba(100,116,139,0.3)'"
+                            [style.color]="depositForm.amount === preset ? '#10b981' : '#94a3b8'">
+                      {{ preset | number:'1.0-0' }} USDT
+                    </button>
+                  }
+                </div>
+              </div>
+              <div>
+                <label for="deposit-custom" class="block text-sm font-medium mb-2" style="color:#94a3b8;">Ou saisir un montant personnalisé</label>
+                <div class="relative">
+                  <input id="deposit-custom" type="number" step="1" min="1" [(ngModel)]="depositForm.amount" name="depositCustom"
+                         class="w-full rounded-xl px-4 py-3 pr-20 text-white text-lg font-semibold focus:outline-none transition-all"
+                         style="background: rgba(15,23,42,0.8); border: 1px solid rgba(100,116,139,0.4); color: white;"
+                         onfocus="this.style.borderColor='rgba(16,185,129,0.6)'"
+                         onblur="this.style.borderColor='rgba(100,116,139,0.4)'"
+                         placeholder="0" />
+                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold" style="color:#10b981;">USDT</span>
+                </div>
+              </div>
+              @if (depositError) {
+                <p class="text-sm" style="color:#f87171;">{{ depositError }}</p>
+              }
+              <button type="button" (click)="goToPaymentStep()"
+                      class="w-full py-3 rounded-xl font-bold text-white transition-all duration-200 text-sm"
+                      style="background: linear-gradient(135deg, #10b981, #059669);">
+                Continuer vers le paiement →
+              </button>
+            </div>
+          }
+
+          <!-- Step 2 : Formulaire carte -->
+          @if (depositStep === 2) {
+            <div class="p-6 space-y-5">
+              <!-- Card preview -->
+              <div class="rounded-2xl p-5 relative overflow-hidden" style="background: linear-gradient(135deg, #1e3a5f 0%, #0f2844 50%, #1a1a4e 100%); min-height: 140px;">
+                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px); background-size: 30px 30px;"></div>
+                <div class="flex justify-between items-start mb-6">
+                  <div>
+                    <p class="text-xs" style="color:rgba(255,255,255,0.5);">Solde à créditer</p>
+                    <p class="text-2xl font-bold text-white">{{ depositForm.amount | number:'1.0-2' }} <span style="color:#10b981;">USDT</span></p>
+                  </div>
+                  <div class="w-12 h-8 rounded-md" style="background: linear-gradient(135deg, #f59e0b, #d97706);"></div>
+                </div>
+                <div class="flex justify-between items-end">
+                  <div>
+                    <p class="text-xs mb-1" style="color:rgba(255,255,255,0.5);">Numéro</p>
+                    <p class="text-sm font-mono text-white tracking-widest">{{ cardDisplay }}</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-xs mb-1" style="color:rgba(255,255,255,0.5);">Expire</p>
+                    <p class="text-sm font-mono text-white">{{ cardForm.expiry || 'MM/AA' }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Champs -->
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:#64748b;">Titulaire de la carte</label>
+                  <input type="text" [(ngModel)]="cardForm.name" name="cardName" autocomplete="cc-name"
+                         class="w-full rounded-xl px-4 py-3 text-white focus:outline-none transition-all"
+                         style="background: rgba(15,23,42,0.8); border: 1px solid rgba(100,116,139,0.4);"
+                         onfocus="this.style.borderColor='rgba(16,185,129,0.6)'"
+                         onblur="this.style.borderColor='rgba(100,116,139,0.4)'"
+                         placeholder="Jean Dupont" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:#64748b;">Numéro de carte</label>
+                  <input type="text" [(ngModel)]="cardForm.number" name="cardNumber" autocomplete="cc-number" maxlength="19"
+                         (input)="onCardNumberInput($event)"
+                         class="w-full rounded-xl px-4 py-3 text-white font-mono tracking-widest focus:outline-none transition-all"
+                         style="background: rgba(15,23,42,0.8); border: 1px solid rgba(100,116,139,0.4);"
+                         onfocus="this.style.borderColor='rgba(16,185,129,0.6)'"
+                         onblur="this.style.borderColor='rgba(100,116,139,0.4)'"
+                         placeholder="0000 0000 0000 0000" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:#64748b;">Date d'expiration</label>
+                    <input type="text" [(ngModel)]="cardForm.expiry" name="cardExpiry" autocomplete="cc-exp" maxlength="5"
+                           (input)="onExpiryInput($event)"
+                           class="w-full rounded-xl px-4 py-3 text-white font-mono focus:outline-none transition-all"
+                           style="background: rgba(15,23,42,0.8); border: 1px solid rgba(100,116,139,0.4);"
+                           onfocus="this.style.borderColor='rgba(16,185,129,0.6)'"
+                           onblur="this.style.borderColor='rgba(100,116,139,0.4)'"
+                           placeholder="MM/AA" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:#64748b;">CVV</label>
+                    <input type="password" [(ngModel)]="cardForm.cvv" name="cardCvv" autocomplete="cc-csc" maxlength="4"
+                           class="w-full rounded-xl px-4 py-3 text-white font-mono focus:outline-none transition-all"
+                           style="background: rgba(15,23,42,0.8); border: 1px solid rgba(100,116,139,0.4);"
+                           onfocus="this.style.borderColor='rgba(16,185,129,0.6)'"
+                           onblur="this.style.borderColor='rgba(100,116,139,0.4)'"
+                           placeholder="•••" />
+                  </div>
+                </div>
+              </div>
+
+              @if (depositError) {
+                <p class="text-sm" style="color:#f87171;">{{ depositError }}</p>
+              }
+
+              <div class="flex gap-3">
+                <button type="button" (click)="depositStep = 1; depositError = ''"
+                        class="rounded-xl px-4 py-3 text-sm font-medium transition-colors"
+                        style="border: 1px solid rgba(100,116,139,0.4); color: #94a3b8; background:transparent;"
+                        onmouseenter="this.style.background='rgba(100,116,139,0.1)'"
+                        onmouseleave="this.style.background='transparent'">← Retour</button>
+                <button type="button" (click)="submitPayment()" [disabled]="depositing"
+                        class="flex-1 py-3 rounded-xl font-bold text-white transition-all duration-200 text-sm"
+                        style="background: linear-gradient(135deg, #10b981, #059669);">
+                  @if (depositing) { <span>Traitement…</span> } @else { Payer {{ depositForm.amount | number:'1.0-2' }} USDT }
+                </button>
+              </div>
+
+              <p class="text-center text-xs" style="color:#475569;">
+                <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                Paiement simulé · Aucune donnée réelle transmise
+              </p>
+            </div>
+          }
+
+          <!-- Step 3 : Traitement -->
+          @if (depositStep === 3) {
+            <div class="p-12 flex flex-col items-center gap-6">
+              <div class="relative w-20 h-20">
+                <div class="absolute inset-0 rounded-full" style="border: 3px solid rgba(16,185,129,0.2);"></div>
+                <div class="absolute inset-0 rounded-full animate-spin" style="border: 3px solid transparent; border-top-color: #10b981;"></div>
+                <div class="absolute inset-0 rounded-full animate-spin" style="border: 3px solid transparent; border-right-color: #059669; animation-duration: 1.5s;"></div>
+                <div class="absolute inset-2 rounded-full flex items-center justify-center" style="background: rgba(16,185,129,0.1);">
+                  <svg class="w-8 h-8" style="color:#10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                </div>
+              </div>
+              <div class="text-center">
+                <p class="text-white font-bold text-lg">Traitement en cours…</p>
+                <p class="text-sm mt-1" style="color:#64748b;">Vérification du paiement · Ne fermez pas cette fenêtre</p>
+              </div>
+              <div class="w-full rounded-full h-1 overflow-hidden" style="background: rgba(30,41,59,1);">
+                <div class="h-full rounded-full" style="background: linear-gradient(90deg,#10b981,#059669); animation: depositProgress 2s ease-in-out forwards;"></div>
+              </div>
+            </div>
+          }
+
+          <!-- Step 4 : Succès -->
+          @if (depositStep === 4) {
+            <div class="p-10 flex flex-col items-center gap-5">
+              <div class="w-20 h-20 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2)); border: 2px solid rgba(16,185,129,0.4);">
+                <svg class="w-10 h-10" style="color:#10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div class="text-center">
+                <p class="text-2xl font-bold text-white">+{{ depositForm.amount | number:'1.0-2' }} USDT</p>
+                <p class="font-semibold mt-1" style="color:#10b981;">Dépôt confirmé !</p>
+                <p class="text-sm mt-2" style="color:#64748b;">Votre solde USDT a été mis à jour.</p>
+              </div>
+              <div class="w-full rounded-xl p-4" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+                <div class="flex justify-between text-sm">
+                  <span style="color:#64748b;">Montant</span>
+                  <span class="font-semibold text-white">{{ depositForm.amount | number:'1.0-2' }} USDT</span>
+                </div>
+                <div class="flex justify-between text-sm mt-2">
+                  <span style="color:#64748b;">Méthode</span>
+                  <span class="font-semibold text-white">Carte •••• {{ cardForm.number ? cardForm.number.slice(-4) : '****' }}</span>
+                </div>
+                <div class="flex justify-between text-sm mt-2">
+                  <span style="color:#64748b;">Statut</span>
+                  <span style="color:#10b981;" class="font-semibold">✓ Approuvé</span>
+                </div>
+              </div>
+              <button type="button" (click)="closeDepositModal()"
+                      class="w-full py-3 rounded-xl font-bold text-white transition-all"
+                      style="background: linear-gradient(135deg, #10b981, #059669);">Fermer</button>
+            </div>
+          }
+
+        </div>
+      </div>
+    }
+
+    <style>
+      &#64;keyframes depositProgress {
+        from { width: 0%; }
+        to { width: 100%; }
+      }
+    </style>
   `,
 })
 export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
@@ -388,10 +633,26 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
 
   showSendModal = false;
   showReceiveModal = false;
+  showDepositModal = false;
   sendForm = { recipientIdentifier: '', symbol: 'BTC', amount: 0 };
+  depositForm = { amount: 1000 };
   sendError = '';
   sendSuccess = '';
+  depositError = '';
+  depositSuccess = '';
   sending = false;
+  depositing = false;
+
+  // Payment flow
+  depositStep = 1; // 1=montant, 2=carte, 3=traitement, 4=succès
+  depositPresets = [100, 500, 1000, 2500, 5000, 10000];
+  cardForm = { name: '', number: '', expiry: '', cvv: '' };
+
+  get cardDisplay(): string {
+    const raw = this.cardForm.number.replace(/\D/g, '');
+    const padded = raw.padEnd(16, '\u2022');
+    return padded.match(/.{1,4}/g)?.join(' ') ?? '•••• •••• •••• ••••';
+  }
   myAccountName = '';
   copiedToClipboard = false;
 
@@ -423,7 +684,7 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
         this.recentTransactions = list;
         this.cdr.markForCheck();
       },
-      error: () => {},
+      error: () => { },
     });
 
     this.auth.getProfile().subscribe({
@@ -431,7 +692,7 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
         this.myAccountName = p.accountName?.trim() || p.email?.trim() || '';
         this.cdr.markForCheck();
       },
-      error: () => {},
+      error: () => { },
     });
 
     interval(60_000).pipe(startWith(0), takeUntil(this.destroy$)).subscribe(() => this.fetchEurRate());
@@ -602,6 +863,130 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.markForCheck();
   }
 
+  openDepositModal(): void {
+    this.showDepositModal = true;
+    this.depositError = '';
+    this.depositSuccess = '';
+    this.depositStep = 1;
+    this.depositForm = { amount: 1000 };
+    this.cardForm = { name: '', number: '', expiry: '', cvv: '' };
+    this.cdr.markForCheck();
+  }
+
+  closeDepositModal(): void {
+    if (this.depositStep === 3) return; // Empêcher la fermeture pendant le traitement
+    this.showDepositModal = false;
+    this.depositError = '';
+    this.depositSuccess = '';
+    this.depositStep = 1;
+    this.cdr.markForCheck();
+  }
+
+  onDepositBackdropClick(event: MouseEvent): void {
+    if (this.depositStep !== 3) {
+      this.closeDepositModal();
+    }
+  }
+
+  selectPreset(amount: number): void {
+    this.depositForm = { amount };
+    this.depositError = '';
+    this.cdr.markForCheck();
+  }
+
+  goToPaymentStep(): void {
+    const amount = Number(this.depositForm.amount);
+    if (!amount || amount < 1) {
+      this.depositError = 'Le montant minimum est 1 USDT.';
+      this.cdr.markForCheck();
+      return;
+    }
+    if (amount > 1000000) {
+      this.depositError = 'Le montant maximum est 1 000 000 USDT.';
+      this.cdr.markForCheck();
+      return;
+    }
+    this.depositError = '';
+    this.depositStep = 2;
+    this.cdr.markForCheck();
+  }
+
+  onCardNumberInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    // Formater le numéro avec des espaces tous les 4 chiffres
+    const raw = input.value.replace(/\D/g, '').substring(0, 16);
+    const formatted = raw.match(/.{1,4}/g)?.join(' ') ?? raw;
+    this.cardForm.number = formatted;
+    setTimeout(() => { input.value = formatted; }, 0);
+    this.cdr.markForCheck();
+  }
+
+  onExpiryInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let val = input.value.replace(/\D/g, '').substring(0, 4);
+    if (val.length >= 3) val = val.substring(0, 2) + '/' + val.substring(2);
+    this.cardForm.expiry = val;
+    setTimeout(() => { input.value = val; }, 0);
+    this.cdr.markForCheck();
+  }
+
+  submitPayment(): void {
+    this.depositError = '';
+    // Validation basique
+    if (!this.cardForm.name.trim()) {
+      this.depositError = 'Veuillez indiquer le nom du titulaire.';
+      this.cdr.markForCheck();
+      return;
+    }
+    const cardRaw = this.cardForm.number.replace(/\D/g, '');
+    if (cardRaw.length < 16) {
+      this.depositError = 'Numéro de carte invalide (16 chiffres requis).';
+      this.cdr.markForCheck();
+      return;
+    }
+    if (!this.cardForm.expiry || this.cardForm.expiry.length < 5) {
+      this.depositError = 'Date d\'expiration invalide (MM/AA).';
+      this.cdr.markForCheck();
+      return;
+    }
+    if (!this.cardForm.cvv || this.cardForm.cvv.length < 3) {
+      this.depositError = 'CVV invalide (3 ou 4 chiffres).';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.depositing = true;
+    this.depositStep = 3; // Écran de traitement
+    this.cdr.markForCheck();
+
+    // Simuler un délai de traitement (2.2s pour voir l'animation)
+    setTimeout(() => {
+      this.api.deposit(Number(this.depositForm.amount)).subscribe({
+        next: () => {
+          this.depositing = false;
+          this.depositStep = 4; // Succès
+          this.cdr.markForCheck();
+          // Mettre à jour le wallet et l'historique
+          this.api.getWallet().subscribe((w) => {
+            this.wallet = w;
+            this.updateDonutChart();
+            this.cdr.markForCheck();
+          });
+          this.api.getHistory(10).subscribe((list) => {
+            this.recentTransactions = list;
+            this.cdr.markForCheck();
+          });
+        },
+        error: (err) => {
+          this.depositing = false;
+          this.depositStep = 2;
+          this.depositError = err.error?.message || 'Erreur lors du dépôt. Veuillez réessayer.';
+          this.cdr.markForCheck();
+        },
+      });
+    }, 2200);
+  }
+
   submitSend(): void {
     this.sendError = '';
     this.sendSuccess = '';
@@ -640,6 +1025,7 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     });
   }
+
 
   copyAccountName(): void {
     if (!this.myAccountName) return;
@@ -852,7 +1238,7 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
           this.cdr.markForCheck();
         }
       },
-      error: () => {},
+      error: () => { },
     });
   }
 
@@ -918,6 +1304,7 @@ export class WalletComponent implements OnInit, OnDestroy, AfterViewInit {
   txLabel(tx: TransactionDto): string {
     if (tx.type === 'BUY') return `Achat ${tx.symbol}`;
     if (tx.type === 'SELL') return `Vente ${tx.symbol}`;
+    if (tx.type === 'DEPOSIT') return `Dépôt USDT (carte)`;
     if (tx.type === 'SEND') return `Envoyé à ${tx.counterpartyAccountName ?? '?'} · ${tx.symbol}`;
     if (tx.type === 'RECEIVE') return `Reçu de ${tx.counterpartyAccountName ?? '?'} · ${tx.symbol}`;
     return `${tx.type} ${tx.symbol}`;

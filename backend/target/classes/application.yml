@@ -8,13 +8,10 @@ spring:
       ddl-auto: validate
     show-sql: false
 
-server:
-  port: 8080
-
 # JWT (à remplacer en production)
 cryptodash:
   jwt:
-    secret: cryptodash-secret-key-min-256-bits-for-hs256-please-change-in-production
+    secret: ${JWT_SECRET:cryptodash-secret-key-min-256-bits-for-hs256-please-change-in-production}
     expiration-ms: 86400000
 # Binance WebSocket (temps réel) + CoinGecko (historique)
   coingecko:
@@ -28,3 +25,20 @@ cryptodash:
   snapshot:
     enabled: true
     cron: "0 0 * * * *"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Europe/Paris
+    username: ${MYSQLUSER}
+    password: ${MYSQLPASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+server:
+  port: ${PORT:8080}
+

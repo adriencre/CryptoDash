@@ -30,7 +30,8 @@ public class WalletService {
     private final TransactionRepository transactionRepository;
     private final PriceService priceService;
 
-    public WalletService(WalletPositionRepository positionRepository, UserRepository userRepository, TransactionRepository transactionRepository, PriceService priceService) {
+    public WalletService(WalletPositionRepository positionRepository, UserRepository userRepository,
+            TransactionRepository transactionRepository, PriceService priceService) {
         this.positionRepository = positionRepository;
         this.userRepository = userRepository;
         this.transactionRepository = transactionRepository;
@@ -54,11 +55,10 @@ public class WalletService {
         for (User user : users) {
             BigDecimal totalValue = computeCurrentTotalUsdt(user.getId());
             entries.add(new LeaderboardEntryDto(
-                user.getAccountName(),
-                user.getEmail(),
-                totalValue,
-                0
-            ));
+                    user.getAccountName(),
+                    user.getEmail(),
+                    totalValue,
+                    0));
         }
 
         // Tri par valeur décroissante
@@ -76,7 +76,8 @@ public class WalletService {
 
     /**
      * Calcule la valeur totale du portefeuille en USDT (positions × prix actuels).
-     * USDT compte pour sa quantité ; les autres actifs utilisent le dernier prix Binance.
+     * USDT compte pour sa quantité ; les autres actifs utilisent le dernier prix
+     * Binance.
      */
     public BigDecimal computeCurrentTotalUsdt(@NonNull UUID userId) {
         List<WalletPosition> positions = positionRepository.findByUserIdOrderBySymbol(userId);
@@ -95,8 +96,10 @@ public class WalletService {
     }
 
     /**
-     * Calcule le P&L réalisé (ventes - coût des ventes) et non réalisé (valeur actuelle - coût des positions).
-     * Coût moyen par symbole en rejouant les transactions (BUY/RECEIVE ajoutent au coût, SELL/SEND retirent au prorata).
+     * Calcule le P&L réalisé (ventes - coût des ventes) et non réalisé (valeur
+     * actuelle - coût des positions).
+     * Coût moyen par symbole en rejouant les transactions (BUY/RECEIVE ajoutent au
+     * coût, SELL/SEND retirent au prorata).
      */
     public PnlSummaryDto computePnl(@NonNull UUID userId) {
         BigDecimal totalValue = computeCurrentTotalUsdt(userId);
@@ -107,7 +110,8 @@ public class WalletService {
 
         for (Transaction tx : transactions) {
             String symbol = tx.getSymbol();
-            if (USDT.equals(symbol)) continue;
+            if (USDT.equals(symbol))
+                continue;
 
             totalAmountBySymbol.putIfAbsent(symbol, BigDecimal.ZERO);
             totalCostBySymbol.putIfAbsent(symbol, BigDecimal.ZERO);
@@ -134,13 +138,16 @@ public class WalletService {
                     totalAmountBySymbol.put(symbol, prevAmount.subtract(amount));
                     totalCostBySymbol.put(symbol, prevCost.subtract(costOfDisposal));
                 }
+                case DEPOSIT -> {
+                } // Dépôt USDT : ignoré dans le calcul PnL
             }
         }
 
         List<WalletPosition> positions = positionRepository.findByUserIdOrderBySymbol(userId);
         BigDecimal costBasis = BigDecimal.ZERO;
         for (WalletPosition p : positions) {
-            if (USDT.equals(p.getSymbol())) continue;
+            if (USDT.equals(p.getSymbol()))
+                continue;
             BigDecimal amt = totalAmountBySymbol.getOrDefault(p.getSymbol(), BigDecimal.ZERO);
             BigDecimal cost = totalCostBySymbol.getOrDefault(p.getSymbol(), BigDecimal.ZERO);
             if (amt.compareTo(BigDecimal.ZERO) > 0 && p.getAmount().compareTo(BigDecimal.ZERO) > 0) {
@@ -153,7 +160,8 @@ public class WalletService {
     }
 
     /**
-     * Initialise le portefeuille avec un solde USDT fictif (appelé à la première consultation si vide).
+     * Initialise le portefeuille avec un solde USDT fictif (appelé à la première
+     * consultation si vide).
      */
     @Transactional
     public void ensureInitialBalance(@NonNull UUID userId) {
@@ -232,15 +240,18 @@ public class WalletService {
     }
 
     /**
-     * Envoie de la crypto du portefeuille de l'utilisateur vers un autre compte (identifié par email ou nom de compte).
+     * Envoie de la crypto du portefeuille de l'utilisateur vers un autre compte
+     * (identifié par email ou nom de compte).
      */
     @Transactional
     public void sendCrypto(@NonNull UUID senderUserId, String recipientIdentifier, String symbol, BigDecimal amount) {
         String baseSymbol = symbol.toUpperCase().replace(USDT, "");
         if (baseSymbol.isEmpty()) {
-            throw new IllegalArgumentException("Vous ne pouvez pas envoyer USDT par virement interne. Utilisez un actif (BTC, ETH, etc.).");
+            throw new IllegalArgumentException(
+                    "Vous ne pouvez pas envoyer USDT par virement interne. Utilisez un actif (BTC, ETH, etc.).");
         }
-        User sender = userRepository.findById(senderUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable."));
+        User sender = userRepository.findById(senderUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable."));
         User recipient = resolveRecipient(recipientIdentifier.trim());
         if (recipient.getId().equals(senderUserId)) {
             throw new IllegalArgumentException("Vous ne pouvez pas vous envoyer des fonds à vous-même.");
@@ -252,12 +263,14 @@ public class WalletService {
         WalletPosition senderPos = positionRepository.findByUserIdAndSymbol(senderUserId, baseSymbol)
                 .orElseThrow(() -> new IllegalArgumentException("Vous ne détenez pas cet actif (" + baseSymbol + ")."));
         if (senderPos.getAmount().compareTo(amount) < 0) {
-            throw new IllegalArgumentException("Solde insuffisant. Vous avez " + senderPos.getAmount() + " " + baseSymbol + ".");
+            throw new IllegalArgumentException(
+                    "Solde insuffisant. Vous avez " + senderPos.getAmount() + " " + baseSymbol + ".");
         }
         senderPos.setAmount(senderPos.getAmount().subtract(amount));
         positionRepository.save(senderPos);
 
-        WalletPosition recipientPos = positionRepository.findByUserIdAndSymbol(recipient.getId(), baseSymbol).orElse(null);
+        WalletPosition recipientPos = positionRepository.findByUserIdAndSymbol(recipient.getId(), baseSymbol)
+                .orElse(null);
         if (recipientPos == null) {
             recipientPos = new WalletPosition();
             recipientPos.setUser(recipient);
@@ -267,11 +280,13 @@ public class WalletService {
         recipientPos.setAmount(recipientPos.getAmount().add(amount));
         positionRepository.save(recipientPos);
 
-        BigDecimal priceUsdt = Optional.ofNullable(priceService.getLastPriceUsdt(baseSymbol + USDT)).orElse(BigDecimal.ZERO);
+        BigDecimal priceUsdt = Optional.ofNullable(priceService.getLastPriceUsdt(baseSymbol + USDT))
+                .orElse(BigDecimal.ZERO);
         BigDecimal totalUsdt = priceUsdt.multiply(amount);
 
         String senderAccountName = sender.getAccountName() != null ? sender.getAccountName() : sender.getEmail();
-        String recipientAccountName = recipient.getAccountName() != null ? recipient.getAccountName() : recipient.getEmail();
+        String recipientAccountName = recipient.getAccountName() != null ? recipient.getAccountName()
+                : recipient.getEmail();
 
         Transaction sendTx = new Transaction();
         sendTx.setUser(sender);
@@ -296,12 +311,45 @@ public class WalletService {
         transactionRepository.save(receiveTx);
     }
 
+    /**
+     * Dépôt fictif de USDT sur le portefeuille de l'utilisateur.
+     * Simule un paiement réel (carte bancaire, virement) sans API externe.
+     */
+    @Transactional
+    public void deposit(@NonNull UUID userId, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Le montant du dépôt doit être positif.");
+        }
+        if (amount.compareTo(new BigDecimal("1000000")) > 0) {
+            throw new IllegalArgumentException("Le montant maximum par dépôt est de 1 000 000 USDT.");
+        }
+
+        ensureInitialBalance(userId);
+        User user = userRepository.getReferenceById(userId);
+
+        WalletPosition usdtPos = positionRepository.findByUserIdAndSymbol(userId, USDT)
+                .orElseThrow(() -> new IllegalStateException("Portefeuille non initialisé."));
+        usdtPos.setAmount(usdtPos.getAmount().add(amount));
+        positionRepository.save(usdtPos);
+
+        Transaction tx = new Transaction();
+        tx.setUser(user);
+        tx.setType(Transaction.Type.DEPOSIT);
+        tx.setSymbol(USDT);
+        tx.setAmount(amount);
+        tx.setPriceUsdt(BigDecimal.ONE);
+        tx.setTotalUsdt(amount);
+        transactionRepository.save(tx);
+    }
+
     private User resolveRecipient(String identifier) {
         if (identifier.contains("@")) {
             return userRepository.findByEmail(identifier.toLowerCase())
-                    .orElseThrow(() -> new IllegalArgumentException("Aucun compte trouvé avec l'email « " + identifier + " »."));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Aucun compte trouvé avec l'email « " + identifier + " »."));
         }
         return userRepository.findByAccountName(identifier.toLowerCase())
-                .orElseThrow(() -> new IllegalArgumentException("Aucun compte trouvé avec le nom « " + identifier + " »."));
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Aucun compte trouvé avec le nom « " + identifier + " »."));
     }
 }

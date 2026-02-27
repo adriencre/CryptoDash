@@ -14,7 +14,7 @@ export interface WalletSummaryDto {
 
 export interface TransactionDto {
   id: string;
-  type: 'BUY' | 'SELL' | 'SEND' | 'RECEIVE';
+  type: 'BUY' | 'SELL' | 'SEND' | 'RECEIVE' | 'DEPOSIT';
   symbol: string;
   amount: number;
   priceUsdt: number;
@@ -122,5 +122,9 @@ export class ApiService {
       symbol: symbol.replace('USDT', '') || 'BTC',
       amount,
     });
+  }
+
+  deposit(amount: number): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/wallet/deposit`, { amount });
   }
 }

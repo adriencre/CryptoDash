@@ -1,6 +1,7 @@
 package com.cryptodash.controller;
 
 import com.cryptodash.dto.BuySellRequest;
+import com.cryptodash.dto.DepositRequest;
 import com.cryptodash.dto.PnlSummaryDto;
 import com.cryptodash.dto.PerformancePointDto;
 import com.cryptodash.dto.SendCryptoRequest;
@@ -42,7 +43,8 @@ public class WalletController {
             @AuthenticationPrincipal UUID userId,
             @Valid @RequestBody BuySellRequest request,
             @RequestParam BigDecimal priceUsdt) {
-        String symbol = request.symbol().toUpperCase().contains("USDT") ? request.symbol().toUpperCase() : request.symbol().toUpperCase() + "USDT";
+        String symbol = request.symbol().toUpperCase().contains("USDT") ? request.symbol().toUpperCase()
+                : request.symbol().toUpperCase() + "USDT";
         walletService.buy(userId, symbol, request.amount(), priceUsdt);
     }
 
@@ -52,7 +54,8 @@ public class WalletController {
             @AuthenticationPrincipal UUID userId,
             @Valid @RequestBody BuySellRequest request,
             @RequestParam BigDecimal priceUsdt) {
-        String symbol = request.symbol().toUpperCase().contains("USDT") ? request.symbol().toUpperCase() : request.symbol().toUpperCase() + "USDT";
+        String symbol = request.symbol().toUpperCase().contains("USDT") ? request.symbol().toUpperCase()
+                : request.symbol().toUpperCase() + "USDT";
         walletService.sell(userId, symbol, request.amount(), priceUsdt);
     }
 
@@ -82,5 +85,13 @@ public class WalletController {
     @GetMapping("/pnl")
     public PnlSummaryDto getPnl(@AuthenticationPrincipal UUID userId) {
         return walletService.computePnl(userId);
+    }
+
+    @PostMapping("/deposit")
+    @ResponseStatus(HttpStatus.OK)
+    public void deposit(
+            @AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody DepositRequest request) {
+        walletService.deposit(userId, request.amount());
     }
 }

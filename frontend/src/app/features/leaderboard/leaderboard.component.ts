@@ -5,7 +5,7 @@ import { NgClass, DecimalPipe } from '@angular/common';
 @Component({
   selector: 'app-leaderboard',
   standalone: true,
-  imports: [NgClass, DecimalPipe],
+  imports: [DecimalPipe],
   template: `
     <div class="mb-8">
       <h1 class="text-2xl font-bold text-white tracking-tight">Classement Mondial</h1>
@@ -52,7 +52,7 @@ import { NgClass, DecimalPipe } from '@angular/common';
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <div class="text-white font-bold tabular-nums">{{ entry.totalValueUsdt | number:'1.0-2' }} USDT</div>
+                  <div class="text-white font-bold tabular-nums">{{ entry.totalValueUsdt | number:'1.2-2' }} USDT</div>
                   <div class="text-emerald-400 text-xs font-medium">ROI: +{{ ((entry.totalValueUsdt - 10000) / 10000 * 100) | number:'1.0-2' }} %</div>
                 </td>
               </tr>

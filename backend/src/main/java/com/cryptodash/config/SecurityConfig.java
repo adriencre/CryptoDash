@@ -34,14 +34,17 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(e -> e.authenticationEntryPoint((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Non authentifié")))
+                .exceptionHandling(e -> e.authenticationEntryPoint(
+                        (req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Non authentifié")))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws/**", "/topic/**").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/2fa/verify").permitAll()
                         .requestMatchers("/api/crypto/**").permitAll()
-                        .requestMatchers("/api/wallet/**", "/api/history/**", "/api/favorites/**", "/api/leaderboard/**").authenticated()
-                        .anyRequest().authenticated()
-                )
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/wallet/**", "/api/history/**", "/api/favorites/**",
+                                "/api/leaderboard/**")
+                        .authenticated()
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

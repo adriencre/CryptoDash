@@ -1,3 +1,4 @@
+/Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/config/RestTemplateConfig.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/dto/WalletPositionDto.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/entity/WalletPosition.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/dto/TwoFactorDisableRequest.java
@@ -39,6 +40,7 @@
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/dto/TwoFactorVerifyRequest.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/dto/LoginRequest.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/dto/LeaderboardEntryDto.java
+/Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/dto/DepositRequest.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/dto/TwoFactorStatusResponse.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/repository/TransactionRepository.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/service/AuthService.java
@@ -50,4 +52,5 @@
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/dto/PerformancePointDto.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/entity/BackupCode.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/dto/SendCryptoRequest.java
+/Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/config/OpenApiConfig.java
 /Users/adriencrepel/Downloads/CryptoDash/backend/src/main/java/com/cryptodash/CryptoDashApplication.java

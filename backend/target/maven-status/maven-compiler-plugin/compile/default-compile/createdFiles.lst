@@ -14,6 +14,7 @@ com/cryptodash/repository/WalletPositionRepository.class
 com/cryptodash/service/TwoFactorService$TwoFactorSetupResult.class
 com/cryptodash/dto/PnlSummaryDto.class
 com/cryptodash/dto/TwoFactorStatusResponse.class
+com/cryptodash/config/RestTemplateConfig.class
 com/cryptodash/service/WalletService$1.class
 com/cryptodash/service/PortfolioSnapshotScheduler.class
 com/cryptodash/entity/Transaction.class
@@ -30,6 +31,7 @@ com/cryptodash/dto/UpdateProfileRequest.class
 com/cryptodash/config/SecurityConfig.class
 com/cryptodash/entity/User.class
 com/cryptodash/dto/AuthResponse.class
+com/cryptodash/config/OpenApiConfig.class
 com/cryptodash/repository/UserFavoriteRepository.class
 com/cryptodash/dto/TwoFactorSetupResponse.class
 com/cryptodash/dto/SendCryptoRequest.class
@@ -51,6 +53,7 @@ com/cryptodash/service/PriceService$1.class
 com/cryptodash/dto/TwoFactorVerifyRequest.class
 com/cryptodash/dto/LoginResponse.class
 com/cryptodash/entity/UserFavorite.class
+com/cryptodash/dto/DepositRequest.class
 com/cryptodash/dto/BuySellRequest.class
 com/cryptodash/service/TwoFactorService.class
 com/cryptodash/dto/TransactionDto.class

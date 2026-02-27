@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.cryptodash.e2e.P2PTransferE2ETest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.85 s -- in com.cryptodash.e2e.P2PTransferE2ETest

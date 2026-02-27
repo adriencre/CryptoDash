@@ -44,7 +44,7 @@ class WebSocketIntegrationTest {
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
-        BlockingQueue<PriceTickDto> received = new ArrayBlockingQueue<>(2);
+        BlockingQueue<PriceTickDto> received = new ArrayBlockingQueue<>(10);
         StompSession session = stompClient.connectAsync(url, new StompSessionHandlerAdapter() {})
                 .get(5, TimeUnit.SECONDS);
 
@@ -63,7 +63,7 @@ class WebSocketIntegrationTest {
         });
 
         PriceTickDto sent = new PriceTickDto(
-                "BTCUSDT",
+                "UNITTEST",
                 new BigDecimal("50000.00"),
                 new BigDecimal("1.5"),
                 new BigDecimal("51000"),
@@ -73,9 +73,18 @@ class WebSocketIntegrationTest {
         );
         messagingTemplate.convertAndSend("/topic/prices", sent);
 
-        PriceTickDto receivedDto = received.poll(3, TimeUnit.SECONDS);
+        PriceTickDto receivedDto = null;
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < 5000) {
+            PriceTickDto dto = received.poll(1, TimeUnit.SECONDS);
+            if (dto != null && "UNITTEST".equals(dto.symbol())) {
+                receivedDto = dto;
+                break;
+            }
+        }
+
         assertThat(receivedDto).isNotNull();
-        assertThat(receivedDto.symbol()).isEqualTo("BTCUSDT");
+        assertThat(receivedDto.symbol()).isEqualTo("UNITTEST");
         assertThat(receivedDto.lastPrice()).hasToString("50000.00");
 
         session.disconnect();
